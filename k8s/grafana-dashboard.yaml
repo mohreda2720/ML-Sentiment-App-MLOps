@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-drift-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  drift-analysis.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "panels": [
+        {
+          "title": "Drift Score (JS Divergence)",
+          "description": "Jensen-Shannon divergence between V1 (stable) and V2 (canary) label distributions. Threshold: 0.5",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisLabel": "Drift Score",
+                "fillOpacity": 10,
+                "lineWidth": 2,
+                "pointSize": 5,
+                "showPoints": "always",
+                "thresholdsStyle": { "mode": "line" }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.5 }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sentiment_drift_score{job=\"analysis-job\"}",
+              "legendFormat": "drift score",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Drift Score (Gauge)",
+          "description": "Current drift score — green if below 0.5 threshold",
+          "type": "gauge",
+          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.3 },
+                  { "color": "red", "value": 0.5 }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sentiment_drift_score{job=\"analysis-job\"}",
+              "legendFormat": "drift score",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Pushgateway Metrics",
+          "description": "All metrics pushed by the analysis job",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 18, "x": 0, "y": 8 },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "{job=\"analysis-job\"}",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": { "Time": false },
+                "indexByName": {},
+                "renameByName": {}
+              }
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["mlops", "drift", "canary"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "MLOps Drift Analysis",
+      "uid": "mlops-drift-analysis"
+    }

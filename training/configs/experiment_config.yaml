@@ -1,0 +1,21 @@
+# Experiment configuration for CISC-814 Assignment 2
+
+mlflow:
+  tracking_uri: "http://localhost:5050"
+  experiment_name: "sentiment-qwen2.5-experiments"
+
+model:
+  name: "Qwen/Qwen2.5-1.5B"
+  max_length: 512
+  device: "auto"  # auto-detect GPU/CPU
+
+data:
+  eval_dataset: "data/eval_sentiment.csv"
+  train_dataset: "data/train_sentiment.csv"
+
+quantization:
+  output_dir: "./qwen2.5-1.5b-gptq-4bit"
+  method: "gptq"
+  bits: 4
+  group_size: 128
+  num_samples: 48

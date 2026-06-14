@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: drift-analysis
+spec:
+  args:
+    - name: baseline-host
+    - name: canary-host
+  metrics:
+    - name: drift-detection-job
+      provider:
+        job:
+          spec:
+            backoffLimit: 1
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: analysis
+                    image: registry.local:5000/sentiment-analysis-job:latest
+                    imagePullPolicy: IfNotPresent
+                    envFrom:
+                      - configMapRef:
+                          name: mlops-config
+                    env:
+                      - name: BASELINE_URL
+                        value: "http://{{args.baseline-host}}:8000/v1/completions"
+                      - name: CANARY_URL
+                        value: "http://{{args.canary-host}}:8000/v1/completions"
+                    resources:
+                      requests:
+                        cpu: 200m
+                        memory: 512Mi
+                      limits:
+                        cpu: "1"
+                        memory: 1Gi
+    - name: drift-score-check
+      initialDelay: 60s
+      interval: 30s
+      count: 3
+      failureLimit: 2
+      successCondition: result[0] < 0.5
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          query: |
+            sentiment_drift_score{job="analysis-job"}

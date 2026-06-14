@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mlops-config
+data:
+  MLFLOW_TRACKING_URI: "http://cisc814-mlflow:5000"
+  EVIDENTLY_URL: "http://cisc814-evidently:8000"
+  PROMETHEUS_PUSHGATEWAY_URL: "http://prometheus-pushgateway.monitoring:9091"

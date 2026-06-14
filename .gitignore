@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Data and models
+data/*.csv
+*.pt
+*.bin
+*.safetensors
+lora_output/
+
+# MLflow
+mlruns/
+
+# Logs
+logs/
+*.jsonl
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+*~

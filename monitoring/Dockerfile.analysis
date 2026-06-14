@@ -1,0 +1,22 @@
+# Analysis job image for Argo Rollouts AnalysisRun.
+# Contains Evidently for drift detection
+# and Prometheus pushgateway client for metric reporting.
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    evidently \
+    pandas \
+    scikit-learn \
+    httpx \
+    prometheus-client
+
+COPY drift_detector.py .
+COPY send_predictions.py .
+
+COPY analysis_entrypoint.sh .
+RUN chmod +x analysis_entrypoint.sh
+
+ENTRYPOINT ["./analysis_entrypoint.sh"]

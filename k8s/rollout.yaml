@@ -1,0 +1,95 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: sentiment-model
+  labels:
+    app: sentiment-model
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: sentiment-model
+  template:
+    metadata:
+      labels:
+        app: sentiment-model
+    spec:
+      containers:
+        - name: vllm-server
+          image: registry.local:5000/vllm-base:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--model"
+            - "Qwen/Qwen2.5-1.5B"
+            - "--port"
+            - "8000"
+            - "--max-model-len"
+            - "512"
+            - "--dtype"
+            - "float16"
+            - "--gpu-memory-utilization"
+            - "0.4"
+            - "--enforce-eager"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+            - name: quantized-model
+              mountPath: /mnt/models/v2-quantized
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          envFrom:
+            - configMapRef:
+                name: mlops-config
+          env:
+            - name: MODEL_VERSION
+              value: "v1-fp16"
+            - name: HF_HUB_OFFLINE
+              value: "1"
+      volumes:
+        - name: hf-cache
+          hostPath:
+            path: /mnt/hf-cache
+            type: Directory
+        - name: quantized-model
+          hostPath:
+            path: /mnt/models/v2-quantized
+            type: Directory
+  strategy:
+    canary:
+      stableService: sentiment-model-stable
+      canaryService: sentiment-model-canary
+      steps:
+        - setWeight: 20
+        - analysis:
+            templates:
+              - templateName: drift-analysis
+            args:
+              - name: baseline-host
+                value: sentiment-model-stable
+              - name: canary-host
+                value: sentiment-model-canary
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 80
+        - pause: {duration: 30s}
