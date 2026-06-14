@@ -41,7 +41,7 @@ The platform continuously validates whether the challenger behaves similarly eno
 
 ## Part A — Experimentation & Model Registry
 
-![Architecture Part A](./docs/architecture 1.png)
+![Architecture Part A](./docs/architecture1.png)
 
 ### Responsibilities
 
@@ -65,7 +65,7 @@ The platform continuously validates whether the challenger behaves similarly eno
 
 ## Part B — Production Platform
 
-![Architecture Part B](./docs/architecture 2.png)
+![Architecture Part B](./docs/architecture2.png)
 
 ### Responsibilities
 
